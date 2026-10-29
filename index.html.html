@@ -96,4 +96,37 @@ $('demoBtn').onclick=()=>render({count:100,latest:'ตัวอย่างเ�
 {symbol:'DEMO3',date:'2026-10-28',close:43.75,e12:43.2,e26:43.0}
 ]});
 </script>
+  <section id="live-test-data" style="margin:20px;padding:16px;border:1px solid #ccc;border-radius:12px;">
+  <h2>ทดสอบข้อมูลราคาหุ้น ADVANC</h2>
+  <p id="stock-status">กำลังโหลดข้อมูล...</p>
+  <p id="stock-latest"></p>
+  <p id="stock-updated"></p>
+</section>
+
+<script>
+(async function () {
+  const status = document.getElementById("stock-status");
+  const latest = document.getElementById("stock-latest");
+  const updated = document.getElementById("stock-updated");
+
+  try {
+    const response = await fetch("./data/test-price.json?t=" + Date.now());
+    if (!response.ok) throw new Error("HTTP " + response.status);
+
+    const data = await response.json();
+    const rows = data.rows || [];
+    if (!rows.length) throw new Error("ไม่พบข้อมูลราคา");
+
+    const last = rows[rows.length - 1];
+    status.textContent = "โหลดข้อมูลสำเร็จ";
+    latest.textContent = "หุ้น: " + data.symbol +
+      " | วันที่: " + last.date +
+      " | ราคาปิด: " + last.close;
+    updated.textContent = "อัปเดตไฟล์: " +
+      (data.fetched_at_utc || "ไม่ระบุ");
+  } catch (error) {
+    status.textContent = "โหลดข้อมูลไม่สำเร็จ: " + error.message;
+  }
+})();
+</script>
 </body></html>
