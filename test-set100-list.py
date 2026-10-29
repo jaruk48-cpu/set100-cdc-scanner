@@ -10,30 +10,35 @@ files = [
     "c1939f8.js"
 ]
 
+terms = [
+    "constituents-list",
+    "constituentsList",
+    "securities-list",
+    "getIndexCompositionList",
+    "api/set/index"
+]
+
 for name in files:
-    url = "https://www.set.or.th/_nuxt/" + name
     req = urllib.request.Request(
-        url, headers={"User-Agent": "Mozilla/5.0"}
+        "https://www.set.or.th/_nuxt/" + name,
+        headers={"User-Agent": "Mozilla/5.0"}
     )
 
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             js = r.read().decode("utf-8", errors="replace")
 
-        hits = []
-        for pattern in [
-            r"constituents",
-            r"set50-set100",
-            r"api/[^\"']{0,120}",
-            r"\$get\([^)]{0,200}"
-        ]:
-            for m in list(re.finditer(pattern, js, re.I))[:3]:
-                hits.append(m.group(0))
-
-        if hits:
-            print("\n###", name, "###")
-            for hit in hits:
-                print(hit[:250])
+        printed = False
+        for term in terms:
+            matches = list(re.finditer(re.escape(term), js, re.I))
+            if matches:
+                if not printed:
+                    print("\n###", name, "###")
+                    printed = True
+                print(term, "พบ", len(matches), "ครั้ง")
+                for m in matches[:2]:
+                    print(js[max(0, m.start()-250):m.end()+500])
+                    print("---")
 
     except Exception as e:
         print(name, "ERROR:", e)
