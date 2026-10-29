@@ -4,12 +4,11 @@ from html.parser import HTMLParser
 URL = "https://www.set.or.th/en/market/index/set100/overview"
 
 class TableParser(HTMLParser):
-    def _init_(self):
-        super()._init_()
+    def __init__(self):
+        super().__init__()
         self.rows = []
         self.row = None
         self.cell = None
-
     def handle_starttag(self, tag, attrs):
         if tag == "tr":
             self.row = []
