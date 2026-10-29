@@ -10,11 +10,17 @@ req = urllib.request.Request(
 with urllib.request.urlopen(req, timeout=30) as response:
     html = response.read().decode("utf-8", errors="replace")
 
-for phrase in ["table-wimfm6bgm6", "aria-busy", "ADVANC"]:
-    print(f"\n--- {phrase} ---")
-    matches = list(re.finditer(phrase, html, re.IGNORECASE))
-    print("พบ:", len(matches))
-    for m in matches[:2]:
-        start = max(0, m.start() - 500)
-        end = min(len(html), m.end() + 1200)
-        print(html[start:end])
+scripts = re.findall(
+    r'<script[^>]+src=["\']([^"\']+)',
+    html,
+    re.IGNORECASE
+)
+
+print("ไฟล์ JavaScript ที่เกี่ยวข้อง:")
+for script in scripts:
+    if "_nuxt/" in script:
+        print("https://www.set.or.th" + script)
+
+print("\nคำใบ้เกี่ยวกับข้อมูลตาราง:")
+for word in ["market-index-overview", "TableOther", "constituents"]:
+    print(word, "พบ", len(re.findall(word, html, re.IGNORECASE)), "ครั้ง")
