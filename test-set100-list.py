@@ -1,23 +1,21 @@
 import urllib.request
-import json
+import re
 
-url = "https://www.set.or.th/api/set/index/set100/composition?lang=en"
+url = "https://www.set.or.th/th/market/information/securities-list/constituents-list-set50-set100"
 
 req = urllib.request.Request(
     url,
-    headers={
-        "User-Agent": "Mozilla/5.0",
-        "Referer": "https://www.set.or.th/en/market/index/set100/overview",
-        "Accept": "application/json"
-    }
+    headers={"User-Agent": "Mozilla/5.0"}
 )
 
 try:
     with urllib.request.urlopen(req, timeout=30) as response:
+        html = response.read().decode("utf-8", errors="replace")
         print("HTTP Status:", response.status)
-        data = json.loads(response.read().decode("utf-8"))
+        print("ขนาดหน้าเว็บ:", len(html), "ตัวอักษร")
 
-    print(json.dumps(data, indent=2, ensure_ascii=False)[:12000])
+        for word in ["SET100", "ADVANC", "AOT", "symbol"]:
+            print(word, "พบ", len(re.findall(word, html, re.I)), "ครั้ง")
 
 except Exception as e:
     print("เกิดข้อผิดพลาด:", e)
