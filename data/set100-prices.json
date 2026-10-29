@@ -1,6 +1,6 @@
 {
   "source": "Yahoo Finance unofficial test source",
-  "fetched_at_utc": "2026-10-29T08:48:56.097716+00:00",
+  "fetched_at_utc": "2026-10-29T12:18:33.992556+00:00",
   "symbols_requested": [
     "ADVANC.BK",
     "AOT.BK",
@@ -496,7 +496,7 @@
       },
       {
         "date": "2026-10-29",
-        "close": 336.0
+        "close": 334.0
       }
     ],
     "AOT.BK": [
@@ -986,7 +986,7 @@
       },
       {
         "date": "2026-10-29",
-        "close": 60.5
+        "close": 60.0
       }
     ],
     "BBL.BK": [
@@ -1966,7 +1966,7 @@
       },
       {
         "date": "2026-10-29",
-        "close": 44.5
+        "close": 44.25
       }
     ],
     "PTT.BK": [
@@ -2456,7 +2456,7 @@
       },
       {
         "date": "2026-10-29",
-        "close": 41.75
+        "close": 42.25
       }
     ]
   },
