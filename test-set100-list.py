@@ -10,16 +10,11 @@ req = urllib.request.Request(
 with urllib.request.urlopen(req, timeout=30) as response:
     html = response.read().decode("utf-8", errors="replace")
 
-print("ความยาว HTML:", len(html))
-print("ตารางที่พบในหน้าเว็บ:")
-
-tables = re.findall(r'<table\b[^>]*>', html, re.IGNORECASE)
-for table in tables:
-    print(table)
-
-print("\nตัวอย่างบริเวณที่มี ADVANC:")
-match = re.search("ADVANC", html, re.IGNORECASE)
-if match:
-    print(html[max(0, match.start()-200):match.end()+300])
-else:
-    print("ไม่พบ ADVANC ใน HTML")
+for phrase in ["table-wimfm6bgm6", "aria-busy", "ADVANC"]:
+    print(f"\n--- {phrase} ---")
+    matches = list(re.finditer(phrase, html, re.IGNORECASE))
+    print("พบ:", len(matches))
+    for m in matches[:2]:
+        start = max(0, m.start() - 500)
+        end = min(len(html), m.end() + 1200)
+        print(html[start:end])
