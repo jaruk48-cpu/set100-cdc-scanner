@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-list:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -15,5 +15,5 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Test SET100 list
+      - name: Run script
         run: python test-set100-list.py
