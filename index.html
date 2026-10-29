@@ -129,4 +129,71 @@ $('demoBtn').onclick=()=>render({count:100,latest:'ตัวอย่างเ�
   }
 })();
 </script>
+  <section id="multi-stock-test" style="margin:20px;padding:16px;border:1px solid #ccc;border-radius:12px;">
+  <h2>ราคาหุ้นทดสอบ SET100</h2>
+  <p id="multi-stock-status">กำลังโหลดราคาหุ้น...</p>
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;text-align:left;">
+      <thead>
+        <tr>
+          <th style="padding:8px;border-bottom:1px solid #ccc;">หุ้น</th>
+          <th style="padding:8px;border-bottom:1px solid #ccc;">วันที่</th>
+          <th style="padding:8px;border-bottom:1px solid #ccc;">ราคาปิด</th>
+        </tr>
+      </thead>
+      <tbody id="multi-stock-rows"></tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+(async function () {
+  const status = document.getElementById("multi-stock-status");
+  const tbody = document.getElementById("multi-stock-rows");
+
+  try {
+    const response = await fetch("./data/set100-prices.json?t=" + Date.now());
+    if (!response.ok) throw new Error("HTTP " + response.status);
+
+    const data = await response.json();
+    const stocks = data.stocks || {};
+    const symbols = Object.keys(stocks);
+
+    if (!symbols.length) throw new Error("ไม่พบข้อมูลหุ้น");
+
+    tbody.replaceChildren();
+
+    for (const symbol of symbols) {
+      const rows = stocks[symbol] || [];
+      if (!rows.length) continue;
+
+      const latest = rows[rows.length - 1];
+      const tr = document.createElement("tr");
+
+      for (const value of [
+        symbol.replace(".BK", ""),
+        latest.date,
+        Number(latest.close).toLocaleString("th-TH", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 4
+        })
+      ]) {
+        const td = document.createElement("td");
+        td.textContent = value;
+        td.style.padding = "8px";
+        td.style.borderBottom = "1px solid #eee";
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    }
+
+    status.textContent =
+      "โหลดข้อมูลสำเร็จ " + symbols.length + " หุ้น";
+  } catch (error) {
+    status.textContent =
+      "โหลดข้อมูลไม่สำเร็จ: " + error.message;
+  }
+})();
+</script>
 </body></html>
