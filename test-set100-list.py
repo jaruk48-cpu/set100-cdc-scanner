@@ -1,34 +1,55 @@
 import re
 import urllib.request
-from html import unescape
+from html.parser import HTMLParser
 
-url = "https://www.set.or.th/en/market/index/set100/overview"
+URL = "https://www.set.or.th/en/market/index/set100/overview"
+
+class TableParser(HTMLParser):
+    def _init_(self):
+        super()._init_()
+        self.rows = []
+        self.row = None
+        self.cell = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "tr":
+            self.row = []
+        elif tag in ("td", "th") and self.row is not None:
+            self.cell = ""
+        elif tag == "br" and self.cell is not None:
+            self.cell += " "
+
+    def handle_data(self, data):
+        if self.cell is not None:
+            self.cell += data
+
+    def handle_endtag(self, tag):
+        if tag in ("td", "th") and self.row is not None:
+            self.row.append(" ".join(self.cell.split()))
+            self.cell = None
+        elif tag == "tr" and self.row is not None:
+            if self.row:
+                self.rows.append(self.row)
+            self.row = None
+            self.cell = None
+
 req = urllib.request.Request(
-    url,
-    headers={"User-Agent": "Mozilla/5.0"}
+    URL, headers={"User-Agent": "Mozilla/5.0"}
 )
 
 with urllib.request.urlopen(req, timeout=30) as response:
     html = response.read().decode("utf-8", errors="replace")
 
-print("HTML length:", len(html))
+parser = TableParser()
+parser.feed(html)
 
-for word in ["api", "constituents", "set100", "ADVANC"]:
-    print(f"\n--- {word} ---")
-    matches = list(re.finditer(word, html, re.I))
-    print("พบ:", len(matches), "ตำแหน่ง")
+print("จำนวนแถวในตาราง:", len(parser.rows))
+print("\nตัวอย่างแถวแรก:")
 
-    for match in matches[:3]:
-        start = max(0, match.start() - 180)
-        end = min(len(html), match.end() + 300)
-        print(unescape(html[start:end]).replace("\n", " ")[:500])
+for row in parser.rows[:12]:
+    print(repr(row))
 
-urls = sorted(set(re.findall(
-    r'https?[^"\'\s<>]+',
-    html
-)))
-
-print("\n--- URL ที่น่าสนใจ ---")
-for item in urls:
-    if any(word in item.lower() for word in ["api", "index", "quote"]):
-        print(item[:300])
+print("\nแถวที่มี ADVANC:")
+for row in parser.rows:
+    if any("ADVANC" in cell.upper() for cell in row):
+        print(repr(row))
