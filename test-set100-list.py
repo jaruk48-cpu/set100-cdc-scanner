@@ -4,8 +4,8 @@ from html.parser import HTMLParser
 URL = "https://www.set.or.th/en/market/index/set100/overview"
 
 class TableParser(HTMLParser):
-    def _init_(self):
-        super()._init_()
+    def __init__(self):
+        super().__init__()
         self.in_table = False
         self.in_cell = False
         self.rows = []
