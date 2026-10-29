@@ -1,23 +1,39 @@
 import urllib.request
 import re
-from urllib.parse import urljoin
 
-page = "https://www.set.or.th/th/market/information/securities-list/constituents-list-set50-set100"
-req = urllib.request.Request(
-    page, headers={"User-Agent": "Mozilla/5.0"}
-)
+files = [
+    "ec7dc67.js", "bdbbc32.js", "83eb973.js",
+    "365b61e.js", "12921c6.js", "02ed788.js",
+    "128a4f2.js", "2742534.js", "e67f5f1.js",
+    "4ed2d59.js", "62c1857.js", "ed89921.js",
+    "f32c284.js", "0abceb1.js", "c1873ec.js",
+    "c1939f8.js"
+]
 
-with urllib.request.urlopen(req, timeout=30) as r:
-    html = r.read().decode("utf-8", errors="replace")
+for name in files:
+    url = "https://www.set.or.th/_nuxt/" + name
+    req = urllib.request.Request(
+        url, headers={"User-Agent": "Mozilla/5.0"}
+    )
 
-scripts = re.findall(
-    r'<script[^>]+src=["\']([^"\']+)',
-    html,
-    re.I
-)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            js = r.read().decode("utf-8", errors="replace")
 
-print("พบไฟล์ JavaScript", len(scripts), "ไฟล์")
+        hits = []
+        for pattern in [
+            r"constituents",
+            r"set50-set100",
+            r"api/[^\"']{0,120}",
+            r"\$get\([^)]{0,200}"
+        ]:
+            for m in list(re.finditer(pattern, js, re.I))[:3]:
+                hits.append(m.group(0))
 
-for src in scripts:
-    if "_nuxt/" in src:
-        print(urljoin(page, src))
+        if hits:
+            print("\n###", name, "###")
+            for hit in hits:
+                print(hit[:250])
+
+    except Exception as e:
+        print(name, "ERROR:", e)
