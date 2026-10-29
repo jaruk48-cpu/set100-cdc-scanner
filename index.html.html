@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SET100 CDC Scanner — Prototype</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#e8eef8;background:#0b1220}
+*{box-sizing:border-box}body{margin:0;padding:18px;background:linear-gradient(160deg,#101b30,#080d17);min-height:100vh}
+main{max-width:1050px;margin:auto}.top{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
+h1{font-size:clamp(1.4rem,4vw,2.1rem);margin:0}.sub{color:#9fb0c8;margin-top:6px}
+.pill{border:1px solid #33516f;border-radius:999px;padding:7px 12px;color:#9ed4ff;font-size:.85rem}
+.panel{background:#121d2e;border:1px solid #253750;border-radius:16px;padding:16px;margin-top:16px;box-shadow:0 10px 30px #0002}
+h2{font-size:1.05rem;margin:0 0 10px}.muted{color:#9fb0c8;font-size:.92rem;line-height:1.55}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button,.filebtn{background:#36c98f;color:#06150f;border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer}
+input[type=file]{max-width:100%;color:#cbd5e1}button.secondary{background:#253750;color:#e8eef8}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.stat{padding:12px;border-radius:12px;background:#0c1523;border:1px solid #23334a}.stat b{font-size:1.4rem;display:block;margin-top:5px}
+table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #26364c}th{color:#9fb0c8;font-weight:600}
+.tablewrap{overflow:auto}.buy{color:#4ce0a4;font-weight:700}.empty{text-align:center;padding:25px;color:#9fb0c8}
+.note{border-left:3px solid #f4bd4f;padding:10px 12px;background:#241f14;color:#f4d99a;border-radius:6px;font-size:.9rem;line-height:1.5}
+code{color:#b6e3ff}a{color:#8bcaff}
+@media(max-width:560px){body{padding:12px}.panel{padding:13px}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}th,td{padding:9px 7px;white-space:nowrap}}
+</style>
+</head>
+<body><main>
+<header class="top">
+  <div><h1>SET100 CDC Scanner</h1><div class="sub">เครื่องมือคัดกรองสัญญาณซื้อหุ้นไทย · รุ่นทดลอง</div></div>
+  <span class="pill">FREE MVP · รายวัน</span>
+</header>
+<section class="panel">
+  <h2>เริ่มสแกนจากข้อมูลราคาหุ้น</h2>
+  <p class="muted">รุ่นนี้ยังไม่ดึงข้อมูลตลาดอัตโนมัติ ให้เลือกไฟล์ CSV ที่มีคอลัมน์ <code>symbol,date,close</code> และมีราคาปิดย้อนหลังหลายวันต่อหุ้น ระบบจะคำนวณ EMA 12/26 แล้วคัดสัญญาณที่เพิ่งเปลี่ยนเป็นขาขึ้นตามกติกาเบื้องต้น</p>
+  <div class="actions"><input id="csvFile" type="file" accept=".csv,text/csv"><button id="scanBtn">สแกนไฟล์ CSV</button><button id="demoBtn" class="secondary">ดูตัวอย่างหน้าจอ</button></div>
+  <div class="stats">
+    <div class="stat"><span class="muted">จำนวนหุ้นในไฟล์</span><b id="stockCount">0</b></div>
+    <div class="stat"><span class="muted">สัญญาณซื้อใหม่</span><b id="signalCount">0</b></div>
+    <div class="stat"><span class="muted">ข้อมูลล่าสุดในไฟล์</span><b id="lastDate">—</b></div>
+  </div>
+</section>
+<section class="panel">
+  <h2>10 อันดับสัญญาณซื้อใหม่</h2>
+  <div class="muted" id="status">ยังไม่มีข้อมูลสแกน กรุณาเลือกไฟล์ CSV ก่อน</div>
+  <div class="tablewrap"><table><thead><tr><th>อันดับ</th><th>หุ้น</th><th>วันที่</th><th>ราคาปิด</th><th>EMA 12</th><th>EMA 26</th><th>สถานะ</th></tr></thead><tbody id="results"><tr><td colspan="7" class="empty">รอข้อมูลราคาหุ้น</td></tr></tbody></table></div>
+</section>
+<section class="panel">
+  <h2>รูปแบบไฟล์ CSV</h2>
+  <p class="muted">บันทึกเป็น CSV โดยมีหัวตาราง <code>symbol,date,close</code> เช่น:</p>
+  <pre style="white-space:pre-wrap;background:#0a1320;padding:12px;border-radius:10px;color:#cde7ff">symbol,date,close
+ADVANC,2026-10-27,335
+ADVANC,2026-10-28,336
+ADVANC,2026-10-29,337
+AOT,2026-10-27,42.25
+AOT,2026-10-28,42.50</pre>
+  <div class="note"><b>โปรดทราบ:</b> นี่เป็นต้นแบบสำหรับทดสอบการคำนวณ ไม่ใช่สัญญาณซื้อขายที่ยืนยันแล้ว และยังไม่ใช่สูตร CDC ActionZone V3 2020 ต้นฉบับแบบครบถ้วน ไม่ควรใช้ตัดสินใจลงทุนจนกว่าจะตรวจสอบสูตรและแหล่งข้อมูลให้ถูกต้อง</div>
+</section>
+<footer class="muted" style="padding:16px 2px">ข้อมูลถูกประมวลผลในเบราว์เซอร์ของคุณ · ไม่มีการส่งไฟล์ออกจากเครื่อง</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function parseCSV(text){
+ const lines=text.replace(/^\uFEFF/,'').trim().split(/\r?\n/);
+ if(lines.length<2) throw new Error('ไฟล์ CSV ไม่มีข้อมูลเพียงพอ');
+ const headers=lines[0].split(',').map(s=>s.trim().toLowerCase());
+ const si=headers.indexOf('symbol'), di=headers.indexOf('date'), ci=headers.indexOf('close');
+ if(si<0||di<0||ci<0) throw new Error('ต้องมีคอลัมน์ symbol,date,close');
+ return lines.slice(1).map(line=>{
+   const c=line.split(','); return {symbol:(c[si]||'').trim().toUpperCase(),date:(c[di]||'').trim(),close:Number((c[ci]||'').trim())};
+ }).filter(x=>x.symbol&&x.date&&Number.isFinite(x.close)&&x.close>0);
+}
+function ema(values,period){const k=2/(period+1),out=[];let prev=values[0];out.push(prev);for(let i=1;i<values.length;i++){prev=values[i]*k+prev*(1-k);out.push(prev)}return out}
+function scan(rows){
+ const groups={}; for(const r of rows)(groups[r.symbol]??=[]).push(r);
+ const signals=[];let latest='';
+ for(const [symbol,arr] of Object.entries(groups)){
+  arr.sort((a,b)=>a.date.localeCompare(b.date)); if(arr.length<27)continue;
+  const closes=arr.map(x=>x.close),e12=ema(closes,12),e26=ema(closes,26),n=arr.length;
+  latest=arr[n-1].date>latest?arr[n-1].date:latest;
+  // Provisional proxy: trend turns bullish when EMA12 crosses above EMA26.
+  const prevBull=e12[n-2]>e26[n-2], bull=e12[n-1]>e26[n-1];
+  if(!prevBull&&bull) signals.push({symbol,date:arr[n-1].date,close:closes[n-1],e12:e12[n-1],e26:e26[n-1],strength:(e12[n-1]-e26[n-1])/e26[n-1]});
+ }
+ signals.sort((a,b)=>b.date.localeCompare(a.date)||b.strength-a.strength);
+ return {signals:signals.slice(0,10),count:Object.keys(groups).length,latest};
+}
+function render(result){
+ $('stockCount').textContent=result.count;$('signalCount').textContent=result.signals.length;$('lastDate').textContent=result.latest||'—';
+ $('status').textContent=result.signals.length?'พบสัญญาณตามกติกาเบื้องต้น (เรียงวันที่ล่าสุดก่อน)':'ไม่พบสัญญาณตามกติกาเบื้องต้นในข้อมูลที่นำเข้า';
+ $('results').innerHTML=result.signals.length?result.signals.map((s,i)=>`<tr><td>${i+1}</td><td><b>${s.symbol}</b></td><td>${s.date}</td><td>${s.close.toLocaleString('en-US',{maximumFractionDigits:3})}</td><td>${s.e12.toFixed(3)}</td><td>${s.e26.toFixed(3)}</td><td class="buy">BUY* </td></tr>`).join(''):'<tr><td colspan="7" class="empty">ไม่มีรายการในรอบนี้</td></tr>';
+}
+$('scanBtn').onclick=async()=>{const f=$('csvFile').files[0];if(!f){$('status').textContent='กรุณาเลือกไฟล์ CSV ก่อน';return}try{render(scan(parseCSV(await f.text())))}catch(e){$('status').textContent=e.message}};
+$('demoBtn').onclick=()=>render({count:100,latest:'ตัวอย่างเท่านั้น',signals:[
+{symbol:'DEMO1',date:'2026-10-29',close:25.5,e12:25.1,e26:24.9},
+{symbol:'DEMO2',date:'2026-10-29',close:8.2,e12:8.05,e26:8.01},
+{symbol:'DEMO3',date:'2026-10-28',close:43.75,e12:43.2,e26:43.0}
+]});
+</script>
+</body></html>
