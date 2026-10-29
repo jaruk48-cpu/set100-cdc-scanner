@@ -1,4 +1,3 @@
-import re
 import urllib.request
 from html.parser import HTMLParser
 
@@ -45,7 +44,6 @@ parser.feed(html)
 
 print("จำนวนแถวในตาราง:", len(parser.rows))
 print("\nตัวอย่างแถวแรก:")
-
 for row in parser.rows[:12]:
     print(repr(row))
 
