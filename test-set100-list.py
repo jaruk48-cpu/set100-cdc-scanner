@@ -1,26 +1,49 @@
 import urllib.request
 import re
 
-URL = "https://www.set.or.th/en/market/index/set100/overview"
+BASE = "https://www.set.or.th"
+SCRIPTS = [
+    "/_nuxt/ec7dc67.js",
+    "/_nuxt/b3a07d8.js",
+    "/_nuxt/83eb973.js",
+    "/_nuxt/56696a5.js",
+    "/_nuxt/7777eae.js",
+    "/_nuxt/365b61e.js",
+    "/_nuxt/0abceb1.js",
+    "/_nuxt/c1873ec.js",
+    "/_nuxt/c1939f8.js",
+]
 
-req = urllib.request.Request(
-    URL, headers={"User-Agent": "Mozilla/5.0"}
-)
+KEYWORDS = [
+    "constituents",
+    "market-index-overview",
+    "api/",
+    "set100",
+    "indexComposition",
+]
 
-with urllib.request.urlopen(req, timeout=30) as response:
-    html = response.read().decode("utf-8", errors="replace")
+for path in SCRIPTS:
+    url = BASE + path
+    print("\n---", path, "---")
 
-scripts = re.findall(
-    r'<script[^>]+src=["\']([^"\']+)',
-    html,
-    re.IGNORECASE
-)
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Mozilla/5.0"}
+        )
+        with urllib.request.urlopen(req, timeout=30) as response:
+            js = response.read().decode("utf-8", errors="replace")
 
-print("ไฟล์ JavaScript ที่เกี่ยวข้อง:")
-for script in scripts:
-    if "_nuxt/" in script:
-        print("https://www.set.or.th" + script)
+        found = False
+        for word in KEYWORDS:
+            for match in list(re.finditer(word, js, re.I))[:3]:
+                start = max(0, match.start() - 120)
+                end = min(len(js), match.end() + 220)
+                print("คำค้น:", word)
+                print(js[start:end])
+                found = True
 
-print("\nคำใบ้เกี่ยวกับข้อมูลตาราง:")
-for word in ["market-index-overview", "TableOther", "constituents"]:
-    print(word, "พบ", len(re.findall(word, html, re.IGNORECASE)), "ครั้ง")
+        if not found:
+            print("ไม่พบคำค้น")
+
+    except Exception as e:
+        print("เกิดข้อผิดพลาด:", e)
