@@ -1,3 +1,4 @@
+
 name: Test daily stock data
 
 on:
@@ -20,7 +21,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Fetch five Thai stocks
+      - name: Fetch stock prices
         run: |
           python - <<'PY'
           import json
@@ -29,19 +30,18 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
 
-         symbols = [
-    line.strip().upper()
-    for line in Path("set100.txt").read_text(encoding="utf-8").splitlines()
-    if line.strip() and not line.strip().startswith("#")
-]
+          symbols = [
+              line.strip().upper()
+              for line in Path("set100.txt").read_text(encoding="utf-8").splitlines()
+              if line.strip() and not line.strip().startswith("#")
+          ]
 
-symbols = [
-    s if s.endswith(".BK") else s + ".BK"
-    for s in symbols
-]
+          symbols = [
+              s if s.endswith(".BK") else s + ".BK"
+              for s in symbols
+          ]
 
-print("Stocks loaded:", len(symbols))
-print("Symbols:", symbols)
+          print("Stocks loaded:", len(symbols))
 
           stocks = {}
           errors = []
