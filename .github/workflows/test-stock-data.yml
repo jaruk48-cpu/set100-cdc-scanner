@@ -29,13 +29,19 @@ jobs:
           from datetime import datetime, timezone
           from pathlib import Path
 
-          symbols = [
-              "ADVANC.BK",
-              "AOT.BK",
-              "BBL.BK",
-              "CPALL.BK",
-              "PTT.BK"
-          ]
+         symbols = [
+    line.strip().upper()
+    for line in Path("set100.txt").read_text(encoding="utf-8").splitlines()
+    if line.strip() and not line.strip().startswith("#")
+]
+
+symbols = [
+    s if s.endswith(".BK") else s + ".BK"
+    for s in symbols
+]
+
+print("Stocks loaded:", len(symbols))
+print("Symbols:", symbols)
 
           stocks = {}
           errors = []
