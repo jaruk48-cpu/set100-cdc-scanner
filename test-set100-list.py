@@ -1,3 +1,4 @@
+
 import urllib.request
 import re
 
@@ -8,21 +9,14 @@ req = urllib.request.Request(
     headers={"User-Agent": "Mozilla/5.0"}
 )
 
-try:
-    with urllib.request.urlopen(req, timeout=30) as response:
-        html = response.read().decode("utf-8", errors="replace")
+with urllib.request.urlopen(req, timeout=30) as response:
+    html = response.read().decode("utf-8", errors="replace")
 
-    print("HTTP Status: 200")
-    print("Page length:", len(html))
+# ค้นหารายชื่อหุ้นที่ฝังอยู่ในหน้าเว็บ
+symbols = sorted(set(re.findall(
+    r'<td[^>]*>\s*([A-Z][A-Z0-9&.-]{1,9})\s*</td>',
+    html
+)))
 
-    symbols = re.findall(
-        r'<tr[^>]*>.*?<td[^>]*>\s*([A-Z0-9&.-]+)\s*</td>',
-        html,
-        re.I | re.S
-    )
-
-    print("Symbols found:", len(symbols))
-    print("First symbols:", symbols[:20])
-
-except Exception as e:
-    print("PAGE ERROR:", e)
+print("พบสัญลักษณ์หุ้น:", len(symbols))
+print("รายชื่อ:", symbols)
